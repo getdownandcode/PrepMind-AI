@@ -1,0 +1,94 @@
+# =========================================
+# PrepMind AI — root .gitignore
+# =========================================
+
+# ----- Secrets / local config -----
+.env
+.env.*
+!.env.example
+!.env.example.*
+
+# ----- OS -----
+.DS_Store
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# ----- Editors / IDEs -----
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# =========================================
+# Backend (Python / FastAPI)
+# =========================================
+
+# Virtual environments
+backend/.venv/
+backend/venv/
+backend/env/
+backend/.env
+
+# Python bytecode & caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/.ruff_cache/
+backend/.coverage
+backend/htmlcov/
+backend/coverage.xml
+backend/.tox/
+
+# Build / distribution
+backend/build/
+backend/dist/
+backend/*.egg-info/
+backend/*.egg
+
+# Local data: vector store, SQLite, uploads
+backend/chroma/
+backend/chroma/
+backend/*.db
+backend/*.sqlite
+backend/*.sqlite3
+backend/uploads/
+backend/storage/
+
+# =========================================
+# Frontend (Next.js / Node)
+# =========================================
+
+# Dependencies
+frontend/node_modules/
+frontend/.pnp
+frontend/.pnp.js
+
+# Next.js
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.vercel/
+
+# TypeScript
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts.bak
+
+# Logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+frontend/lerna-debug.log*
+
+# Test / coverage
+frontend/coverage/
+frontend/.nyc_output/
+
+# Misc
+frontend/.cache/
+frontend/.parcel-cache/

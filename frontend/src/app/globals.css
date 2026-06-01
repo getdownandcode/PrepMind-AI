@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+    --card: 224 71% 6%;
+    --card-foreground: 213 31% 91%;
+    --primary: 263 70% 60%;
+    --primary-foreground: 210 20% 98%;
+    --muted: 223 47% 11%;
+    --muted-foreground: 215 16% 65%;
+    --accent: 295 80% 65%;
+    --accent-foreground: 210 20% 98%;
+    --border: 216 34% 17%;
+    --ring: 263 70% 60%;
+  }
+
+  * { border-color: hsl(var(--border)); }
+  body { font-feature-settings: "rlig" 1, "calt" 1; }
+}
