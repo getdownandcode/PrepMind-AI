@@ -1,19 +1,17 @@
-"""Initial schema."""
-"""${message}
+"""Initial schema.
 
-Revision ID: ${up_revision}
-Revises: ${down_revision | comma,n}
-Create Date: ${create_date}
+Revision ID: 0001_initial
+Revises: None
+Create Date: 2024-01-01 00:00:00.000000
 
 """
 from alembic import op
 import sqlalchemy as sa
-${imports if imports else ""}
 
-revision = ${repr(up_revision)}
-down_revision = ${repr(down_revision)}
-branch_labels = ${repr(branch_labels)}
-depends_on = ${repr(depends_on)}
+revision = "0001_initial"
+down_revision = None
+branch_labels = None
+depends_on = None
 
 
 def upgrade() -> None:

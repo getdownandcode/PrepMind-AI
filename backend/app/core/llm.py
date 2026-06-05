@@ -42,28 +42,49 @@ class LLMClient:
         self,
         *,
         system: str,
-        user: str,
+        user: str | None = None,
+        contents: Any | None = None,
         model: str | None = None,
         temperature: float = 0.4,
         max_tokens: int = 1500,
+        response_mime_type: str | None = None,
     ) -> str:
         config = types.GenerateContentConfig(
             system_instruction=system,
             temperature=temperature,
             max_output_tokens=max_tokens,
+            response_mime_type=response_mime_type,
         )
-        resp = await self._client.aio.models.generate_content(
-            model=model or GEMINI_MODEL,
-            contents=user,
-            config=config,
-        )
-        return resp.text or ""
+        model_name = model or GEMINI_MODEL
+        payload = contents if contents is not None else user
+        try:
+            resp = await self._client.aio.models.generate_content(
+                model=model_name,
+                contents=payload,
+                config=config,
+            )
+            return resp.text or ""
+        except Exception as exc:
+            if model_name == "gemini-2.5-flash":
+                logger.warning("Gemini 2.5 Flash failed (exc=%s). Falling back to gemini-2.5-flash-lite...", exc)
+                try:
+                    resp = await self._client.aio.models.generate_content(
+                        model="gemini-2.5-flash-lite",
+                        contents=payload,
+                        config=config,
+                    )
+                    return resp.text or ""
+                except Exception as fallback_exc:
+                    logger.error("Gemini 2.5 Flash Lite fallback failed: %s", fallback_exc)
+                    raise LLMError(f"Gemini call failed: {fallback_exc}") from fallback_exc
+            raise LLMError(f"Gemini call failed: {exc}") from exc
 
     async def generate_structured(
         self,
         *,
         system: str,
-        user: str,
+        user: str | None = None,
+        contents: Any | None = None,
         schema: Type[T],
         model: str | None = None,
         temperature: float = 0.3,
@@ -77,31 +98,65 @@ class LLMClient:
             f"Target JSON schema (example shape):\n"
             f"{json.dumps(schema.model_json_schema(), indent=2)}"
         )
-        full_user = f"{user}\n\n{schema_hint}"
+
+        payload = contents if contents is not None else user
+        if payload is None:
+            raise ValueError("Either user or contents must be provided")
+
+        if isinstance(payload, list):
+            formatted_payload = list(payload)
+            appended = False
+            for i, item in enumerate(formatted_payload):
+                if isinstance(item, str):
+                    formatted_payload[i] = f"{item}\n\n{schema_hint}"
+                    appended = True
+                    break
+            if not appended:
+                formatted_payload.append(schema_hint)
+        else:
+            formatted_payload = f"{payload}\n\n{schema_hint}"
 
         raw = await self.generate(
             system=json_system,
-            user=full_user,
+            contents=formatted_payload,
             model=model,
             temperature=temperature,
-            max_tokens=2000,
+            max_tokens=4000,
+            response_mime_type="application/json",
         )
 
         try:
             return _parse_and_validate(raw, schema)
-        except ValidationError as exc:
-            logger.warning("LLM output failed validation, retrying once. err=%s", exc)
-            corrective_user = (
-                f"{user}\n\nYour previous output was invalid JSON. "
-                f"Validation errors (first 3): {exc.errors()[:3]}.\n"
-                f"Return ONLY valid JSON matching the schema. {schema_hint}"
-            )
+        except (ValidationError, json.JSONDecodeError) as exc:
+            logger.warning("LLM output failed validation or JSON decoding, retrying once. err=%s", exc)
+            if isinstance(payload, list):
+                corrective_payload = list(payload)
+                appended = False
+                for i, item in enumerate(corrective_payload):
+                    if isinstance(item, str):
+                        corrective_payload[i] = (
+                            f"{item}\n\nYour previous output was invalid JSON. "
+                            f"Validation errors (first 3): {exc.errors()[:3] if hasattr(exc, 'errors') else str(exc)}.\n"
+                            f"Return ONLY valid JSON matching the schema. {schema_hint}"
+                        )
+                        appended = True
+                        break
+                if not appended:
+                    corrective_payload.append(schema_hint)
+            else:
+                corrective_payload = (
+                    f"{payload}\n\nYour previous output was invalid JSON. "
+                    f"Validation errors (first 3): {exc.errors()[:3] if hasattr(exc, 'errors') else str(exc)}.\n"
+                    f"Return ONLY valid JSON matching the schema. {schema_hint}"
+                )
+
             raw2 = await self.generate(
                 system=json_system,
-                user=corrective_user,
+                contents=corrective_payload,
                 model=model,
                 temperature=0.1,
-                max_tokens=2000,
+                max_tokens=4000,
+                response_mime_type="application/json",
             )
             return _parse_and_validate(raw2, schema)
 

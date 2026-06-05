@@ -1,18 +1,18 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import type { Route } from "next";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@/store/auth-store";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/store/auth-store";
 import { motion } from "framer-motion";
-import { Mail, Lock, ArrowRight, Sparkles } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Sparkles } from "lucide-react";
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter();
-  const { login, loading, error } = useAuth();
+  const { signup, loading, error } = useAuth();
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [, startTransition] = useTransition();
@@ -20,7 +20,7 @@ export default function LoginPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await login(email, password);
+      await signup(email, password, fullName || undefined);
       startTransition(() => router.push("/dashboard"));
     } catch {
       /* error is stored in auth state */
@@ -44,16 +44,29 @@ export default function LoginPage() {
             <Sparkles className="h-6 w-6" />
           </div>
           <h2 className="text-3xl font-extrabold tracking-tight text-foreground">
-            Welcome back
+            Create account
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Sign in to continue your adaptive mock prep.
+            Start a personalized, adaptive mock interview plan today.
           </p>
         </div>
 
         <div className="page-panel rounded-2xl p-8 shadow-xl border-border bg-card">
-          <form onSubmit={onSubmit} className="space-y-6">
+          <form onSubmit={onSubmit} className="space-y-5">
             <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  Full name
+                </label>
+                <Input
+                  placeholder="John Doe"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="bg-muted/10 border-border focus:bg-background transition-colors"
+                />
+              </div>
+
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-foreground flex items-center gap-2">
                   <Mail className="h-4 w-4 text-muted-foreground" />
@@ -77,7 +90,8 @@ export default function LoginPage() {
                 <Input
                   type="password"
                   required
-                  placeholder="••••••••"
+                  placeholder="Min. 8 characters"
+                  minLength={8}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-muted/10 border-border focus:bg-background transition-colors"
@@ -96,15 +110,15 @@ export default function LoginPage() {
             )}
 
             <Button type="submit" disabled={loading} className="w-full shadow-md py-6 flex items-center justify-center gap-2 text-base font-semibold">
-              {loading ? "Signing in..." : "Sign in"}
+              {loading ? "Creating..." : "Create account"}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </form>
 
           <div className="mt-8 text-center text-sm">
-            <span className="text-muted-foreground">New here? </span>
-            <Link className="font-bold text-primary hover:underline" href={"/signup" as Route}>
-              Create an account
+            <span className="text-muted-foreground">Already have an account? </span>
+            <Link className="font-bold text-primary hover:underline" href="/login">
+              Sign in
             </Link>
           </div>
         </div>
