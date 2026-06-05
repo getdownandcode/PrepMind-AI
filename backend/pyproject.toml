@@ -5,6 +5,7 @@ description = "Adaptive AI-powered interview preparation API"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.110",
+    "boto3>=1.34",
     "uvicorn[standard]>=0.27",
     "pydantic>=2.6",
     "pydantic-settings>=2.2",
@@ -12,7 +13,8 @@ dependencies = [
     "asyncpg>=0.29",
     "alembic>=1.13",
     "python-jose[cryptography]>=3.3",
-    "passlib[bcrypt]>=1.7",
+    "passlib[bcrypt]>=1.7.4",
+    "bcrypt==4.0.1",
     "python-multipart>=0.0.9",
     "pypdf>=4.0",
     "google-genai>=1.0",
